@@ -1,0 +1,50 @@
+
+// Phone lighting vertex shader. Created using inspiration and code from:
+//   * http://www.cse.ohio-state.edu/~hwshen/5542/Site/Slides_files/shading_glsl.pdf
+//   * http://www.opengl-tutorial.org/beginners-tutorials/tutorial-8-basic-shading/
+
+in vec3 position_world;
+in vec3 normal_camera;
+in vec3 eyedir_camera;
+in vec3 lightdir_camera;
+
+out vec3 color;
+
+uniform vec3 light_world;
+uniform vec3 ambient_mat;
+uniform vec3 diffuse_mat;
+uniform vec3 specular_mat;
+uniform float specular_power;
+
+void main(){
+
+	// Light emission properties
+	// You probably want to put them as uniforms
+	vec3 LightColor = vec3(1,1,1);
+	float LightPower = 50.0f;
+	
+	// Material properties
+	vec3 MaterialDiffuseColor = ambient_mat;
+	vec3 MaterialAmbientColor = diffuse_mat * MaterialDiffuseColor;
+	vec3 MaterialSpecularColor = specular_mat;
+
+	// Distance to light.
+	float distance = length( light_world - position_world );
+
+	// Diffuse calculation
+	vec3 n = normalize(normal_camera); // normal
+	vec3 l = normalize(lightdir_camera); // to light
+    float diffuseAngle = dot(n, l);
+	diffuseAngle = clamp(diffuseAngle, 0, 1);
+	
+    // Specular calculation
+	vec3 e = normalize(eyedir_camera); // to eye
+	vec3 r = reflect(-l, n); // light reflection
+    float specularAngle = dot(e, r);
+	specularAngle = clamp(specularAngle, 0, 1);
+	
+	color = MaterialAmbientColor +
+            MaterialDiffuseColor * LightColor * LightPower / 2.0f * diffuseAngle / (distance*distance) +
+            MaterialSpecularColor * LightColor * LightPower * pow(specularAngle,specular_power) / (distance*distance);
+
+}
